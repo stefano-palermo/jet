@@ -121,23 +121,23 @@ WITH primaryKeys AS (
 			 ON t.constraint_name = c.constraint_name AND
 				c.table_schema = t.table_schema AND
 				c.table_name = t.table_name
-	WHERE t.table_schema = 'reporting' AND t.table_name = 'post_metrics' AND t.constraint_type = 'PRIMARY KEY'
+	WHERE t.table_schema = $1 AND t.table_name = $2 AND t.constraint_type = 'PRIMARY KEY'
 )
 SELECT columns.column_name as "column.Name",
 	   is_nullable = 'YES' as "column.isNullable",
 	   'false' as "column.isGenerated",
 	   (pk.column_name IS NOT NULL) as "column.IsPrimaryKey",
-	   (CASE columns.data_type
+	   (CASE columns.udt_name
                  WHEN 'ARRAY' THEN 'array'
                  WHEN 'USER-DEFINED' THEN 'user-defined'
                  ELSE 'base'
        END) AS "dataType.Kind",
-	   columns.udt_name AS "dataType.Name",
+	   columns.data_type AS "dataType.Name",
 	   FALSE as "dataType.isUnsigned"
 FROM information_schema.columns AS columns
 LEFT JOIN primaryKeys AS pk
     ON pk.column_name = columns.column_name
-WHERE columns.table_schema = 'reporting' AND columns.table_name = 'post_metrics'
+WHERE columns.table_schema = $1 AND columns.table_name = $2
 ORDER BY columns.ordinal_position;
 `
 	var columns []metadata.Column
