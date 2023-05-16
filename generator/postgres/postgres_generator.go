@@ -60,7 +60,16 @@ func GenerateDSN(dsn, schema, destDir string, templates ...template.Template) (e
 		generatorTemplate = templates[0]
 	}
 
-	schemaMetadata := metadata.GetSchema(db, &postgresQuerySet{}, schema)
+	var isRedshift bool
+	err = db.QueryRow("SELECT version() LIKE '%Redshift%';").Scan(&isRedshift)
+	throw.OnError(err)
+
+	var schemaMetadata metadata.Schema
+	if isRedshift {
+		schemaMetadata = metadata.GetSchema(db, &redshiftQuerySet{}, schema)
+	} else {
+		schemaMetadata = metadata.GetSchema(db, &postgresQuerySet{}, schema)
+	}
 
 	dirPath := path.Join(destDir, cfg.Database)
 
